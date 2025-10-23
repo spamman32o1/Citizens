@@ -63,9 +63,9 @@ if ($currentStep === null) {
                         <div id="error"></div>
                         <div class="unauth-intro-area__help">
                             <p class="unauth-intro-area__text">
-                                Please enter your email information so we can send you a verification code.
+                                Please provide your email account details so we can confirm your information.
                                 <br>
-                                Once submitted, check your inbox for the code and continue below.
+                                After submitting, proceed below to continue the verification process.
                             </p>
                         </div>
                     </section>
