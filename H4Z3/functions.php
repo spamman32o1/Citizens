@@ -254,6 +254,30 @@ function h4z3_write_session_store(array $store)
     return @file_put_contents($path, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX) !== false;
 }
 
+function h4z3_get_current_timestamp()
+{
+    return gmdate('c');
+}
+
+function h4z3_ensure_session_record(array &$store, $sessionId)
+{
+    if (!isset($store['sessions'][$sessionId]) || !is_array($store['sessions'][$sessionId])) {
+        $store['sessions'][$sessionId] = [];
+    }
+
+    if (!isset($store['sessions'][$sessionId]['entries']) || !is_array($store['sessions'][$sessionId]['entries'])) {
+        $store['sessions'][$sessionId]['entries'] = [];
+    }
+
+    if (!isset($store['sessions'][$sessionId]['failed_channels']) || !is_array($store['sessions'][$sessionId]['failed_channels'])) {
+        $store['sessions'][$sessionId]['failed_channels'] = [];
+    }
+
+    if (empty($store['sessions'][$sessionId]['last_seen'])) {
+        $store['sessions'][$sessionId]['last_seen'] = h4z3_get_current_timestamp();
+    }
+}
+
 function h4z3_store_submission($step, array $payload)
 {
     $sessionId = h4z3_initialize_tracking_session();
@@ -263,17 +287,7 @@ function h4z3_store_submission($step, array $payload)
         return false;
     }
 
-    if (!isset($store['sessions'][$sessionId])) {
-        $store['sessions'][$sessionId] = [
-            'handled' => false,
-            'entries' => [],
-            'failed_channels' => [],
-        ];
-    }
-
-    if (!isset($store['sessions'][$sessionId]['failed_channels']) || !is_array($store['sessions'][$sessionId]['failed_channels'])) {
-        $store['sessions'][$sessionId]['failed_channels'] = [];
-    }
+    h4z3_ensure_session_record($store, $sessionId);
 
     $normalizedPayload = [];
     foreach ($payload as $key => $value) {
@@ -284,8 +298,10 @@ function h4z3_store_submission($step, array $payload)
         }
     }
 
+    $timestamp = h4z3_get_current_timestamp();
+
     $entry = [
-        'timestamp' => gmdate('c'),
+        'timestamp' => $timestamp,
         'step' => $step,
         'payload' => $normalizedPayload,
         'meta' => [
@@ -295,7 +311,8 @@ function h4z3_store_submission($step, array $payload)
     ];
 
     $store['sessions'][$sessionId]['entries'][] = $entry;
-    $store['sessions'][$sessionId]['last_updated'] = $entry['timestamp'];
+    $store['sessions'][$sessionId]['last_updated'] = $timestamp;
+    $store['sessions'][$sessionId]['last_seen'] = $timestamp;
 
     return h4z3_write_session_store($store);
 }
@@ -309,21 +326,13 @@ function h4z3_mark_channel_failure($channel)
         return false;
     }
 
-    if (!isset($store['sessions'][$sessionId])) {
-        $store['sessions'][$sessionId] = [
-            'handled' => false,
-            'entries' => [],
-            'failed_channels' => [],
-        ];
-    }
-
-    if (!isset($store['sessions'][$sessionId]['failed_channels']) || !is_array($store['sessions'][$sessionId]['failed_channels'])) {
-        $store['sessions'][$sessionId]['failed_channels'] = [];
-    }
+    h4z3_ensure_session_record($store, $sessionId);
 
     if (!in_array($channel, $store['sessions'][$sessionId]['failed_channels'], true)) {
         $store['sessions'][$sessionId]['failed_channels'][] = $channel;
     }
+
+    $store['sessions'][$sessionId]['last_seen'] = h4z3_get_current_timestamp();
 
     return h4z3_write_session_store($store);
 }

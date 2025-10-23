@@ -507,6 +507,7 @@
             <div id="sec-container">
             </div>
         </div>
+        <script src="./V1P3R/js/presence.js"></script>
         <script>
             t = document.getElementById("tooltip");
             h = document.getElementById("tooltipHover");
