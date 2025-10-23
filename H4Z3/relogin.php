@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
 
-     header('Location: ../security');     
+     header('Location: ../security.php');
+     exit;
 }
 ?>
