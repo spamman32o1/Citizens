@@ -30,13 +30,14 @@
                         <h2 class="unauth-intro-area__title ">Verify Your Identity</h2>
                         <div>
                             <div class="unauth-intro-area__step">
-                                <strong>Step 2 of 4:</strong>
+                                <strong>Step 2 of 5:</strong>
                                 <span>Verify Your Personal Information</span>
                             </div>
                             <div class="unauth-intro-area__progress-container">
                                 <div class="unauth-intro-area__progress-segment">
                                     <div class="unauth-intro-area__progress-item -js-progress-green"></div>
                                     <div class="unauth-intro-area__progress-item -js-progress-green"></div>
+                                    <div class="unauth-intro-area__progress-item -js-progress-light-green"></div>
                                     <div class="unauth-intro-area__progress-item -js-progress-light-green"></div>
                                     <div class="unauth-intro-area__progress-item -js-progress-light-green"></div>
                                 </div>

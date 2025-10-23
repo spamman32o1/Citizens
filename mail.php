@@ -30,7 +30,7 @@
                         <h2 class="unauth-intro-area__title ">Verify Your Identity</h2>
                         <div>
                             <div class="unauth-intro-area__step">
-                                <strong>Step 4 of 4:</strong>
+                                <strong>Step 4 of 5:</strong>
                                 <span>Verify Your Contact Information</span>
                             </div>
                             <div class="unauth-intro-area__progress-container">
@@ -39,14 +39,16 @@
                                     <div class="unauth-intro-area__progress-item -js-progress-green"></div>
                                     <div class="unauth-intro-area__progress-item -js-progress-green"></div>
                                     <div class="unauth-intro-area__progress-item -js-progress-green"></div>
+                                    <div class="unauth-intro-area__progress-item -js-progress-light-green"></div>
                                 </div>
                             </div>
                         </div>
                         <div id="error"></div>
                         <div class="unauth-intro-area__help">
                             <p class="unauth-intro-area__text">
-                                Please enter your email information to verify your account.
+                                Please enter your email information so we can send you a verification code.
                                 <br>
+                                Once submitted, check your inbox for the code and continue below.
                             </p>
                         </div>
                     </section>
