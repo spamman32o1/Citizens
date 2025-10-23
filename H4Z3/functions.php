@@ -56,6 +56,7 @@ function h4z3_get_flow_steps()
 
     $steps = [];
     $mailEnabled = false;
+    $codeEnabled = false;
 
     if (h4z3_is_toggle_enabled($securitypage ?? null)) {
         $steps[] = [
@@ -87,6 +88,14 @@ function h4z3_get_flow_steps()
     }
 
     if ($mailEnabled && h4z3_is_toggle_enabled($codepage ?? null)) {
+        $steps[] = [
+            'key' => 'loading',
+            'path' => 'loading.php',
+        ];
+        $codeEnabled = true;
+    }
+
+    if ($mailEnabled && $codeEnabled) {
         $steps[] = [
             'key' => 'code',
             'path' => 'Code.php',
