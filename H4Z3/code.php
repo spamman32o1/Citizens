@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
 
-     header('Location: ../complete');
+     header('Location: ../complete.php');
      exit;
 }
 ?>
