@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
 
-    header('Location: ../personal');
+    header('Location: ../personal.php');
     exit;
 }
 ?>
