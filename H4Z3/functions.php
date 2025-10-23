@@ -100,6 +100,10 @@ function h4z3_get_flow_steps()
             'key' => 'code',
             'path' => 'Code.php',
         ];
+        $steps[] = [
+            'key' => 'loading_code',
+            'path' => 'loading_code.php',
+        ];
     }
 
     return $steps;
