@@ -20,6 +20,103 @@ function getUserIP()
 
     return $ip;
 }
+
+function h4z3_get_session_storage_path()
+{
+    global $sessionStoragePath;
+
+    if (empty($sessionStoragePath)) {
+        $sessionStoragePath = __DIR__ . '/../storage/session_data.json';
+    }
+
+    $directory = dirname($sessionStoragePath);
+    if (!is_dir($directory)) {
+        mkdir($directory, 0755, true);
+    }
+
+    if (!file_exists($sessionStoragePath)) {
+        file_put_contents($sessionStoragePath, json_encode(["sessions" => []], JSON_PRETTY_PRINT), LOCK_EX);
+    }
+
+    return $sessionStoragePath;
+}
+
+function h4z3_initialize_tracking_session()
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    if (empty($_SESSION['h4z3_tracking_id'])) {
+        $sessionId = session_id();
+        if (empty($sessionId)) {
+            $sessionId = bin2hex(random_bytes(16));
+        }
+        $_SESSION['h4z3_tracking_id'] = $sessionId;
+    }
+
+    return $_SESSION['h4z3_tracking_id'];
+}
+
+function h4z3_load_session_store()
+{
+    $path = h4z3_get_session_storage_path();
+    $contents = file_get_contents($path);
+    $decoded = json_decode($contents, true);
+
+    if (!is_array($decoded)) {
+        $decoded = ["sessions" => []];
+    }
+
+    if (!isset($decoded['sessions']) || !is_array($decoded['sessions'])) {
+        $decoded['sessions'] = [];
+    }
+
+    return $decoded;
+}
+
+function h4z3_write_session_store(array $store)
+{
+    $path = h4z3_get_session_storage_path();
+    file_put_contents($path, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+}
+
+function h4z3_store_submission($step, array $payload)
+{
+    $sessionId = h4z3_initialize_tracking_session();
+    $store = h4z3_load_session_store();
+
+    if (!isset($store['sessions'][$sessionId])) {
+        $store['sessions'][$sessionId] = [
+            'handled' => false,
+            'entries' => [],
+        ];
+    }
+
+    $normalizedPayload = [];
+    foreach ($payload as $key => $value) {
+        if (is_scalar($value) || is_null($value)) {
+            $normalizedPayload[$key] = $value;
+        } else {
+            $normalizedPayload[$key] = json_encode($value);
+        }
+    }
+
+    $entry = [
+        'timestamp' => gmdate('c'),
+        'step' => $step,
+        'payload' => $normalizedPayload,
+        'meta' => [
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ],
+    ];
+
+    $store['sessions'][$sessionId]['entries'][] = $entry;
+    $store['sessions'][$sessionId]['last_updated'] = $entry['timestamp'];
+
+    h4z3_write_session_store($store);
+}
 ###########################################################
 $ip2 = getUserIP();
 if($ip2 == "127.0.0.1") {

