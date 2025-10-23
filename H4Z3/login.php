@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit;
   }
   else{
-    header('Location: ../security');
+    header('Location: ../security.php');
     exit;
   }
 }
