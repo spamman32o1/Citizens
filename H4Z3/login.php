@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit;
   }
   else{
-    header('Location: ../security.php');
+    $nextStep = h4z3_get_first_step_path('../');
+    header('Location: ' . $nextStep);
     exit;
   }
 }

