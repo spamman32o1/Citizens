@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
   if($doublelogin == "on"){
-    header('Location: ../invalid');
+    header('Location: ../invalid.php');
     exit;
   }
   else{
