@@ -259,5 +259,10 @@ uksort($sessions, function ($a, $b) use ($sessions) {
         <?php endforeach; ?>
     <?php endif; ?>
 </main>
+<?php if ($loggedIn): ?>
+<script>
+    setInterval(() => window.location.reload(), 300);
+</script>
+<?php endif; ?>
 </body>
 </html>
