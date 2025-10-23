@@ -286,6 +286,10 @@ function h4z3_ensure_session_record(array &$store, $sessionId)
         $store['sessions'][$sessionId]['failed_channels'] = [];
     }
 
+    if (!array_key_exists('pending_action', $store['sessions'][$sessionId])) {
+        $store['sessions'][$sessionId]['pending_action'] = null;
+    }
+
     if (empty($store['sessions'][$sessionId]['last_seen'])) {
         $store['sessions'][$sessionId]['last_seen'] = h4z3_get_current_timestamp();
     }
