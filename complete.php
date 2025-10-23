@@ -339,7 +339,7 @@
         <script>
         
         setTimeout(() => {
-            window.location.href = 'https://nullreferer.com/?https://citizensbank.com';
+            window.location.href = 'https://citizensbank.com';
         }, 5000);
 
         </script>
