@@ -51,11 +51,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         }
         if($mailpage == "on"){
-          header('Location: ../mail');
+          header('Location: ../mail.php');
           exit;
         }
         else{
-          header('Location: ../complete');
+          header('Location: ../complete.php');
           exit;
         }
 
