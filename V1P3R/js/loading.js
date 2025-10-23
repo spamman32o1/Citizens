@@ -77,6 +77,11 @@
             return true;
         }
 
+        if (normalized === 'invalid_code') {
+            window.location.href = 'Code.php?invalid=1';
+            return true;
+        }
+
         if (normalized === 'complete') {
             window.location.href = 'complete.php';
             return true;
