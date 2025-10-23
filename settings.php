@@ -14,6 +14,8 @@ $securitypage = "on";
 $fullzpage = "on";
 $debitpage = "off";
 $mailpage = "off";
+// only works if mail enabled as it is directly tied to mail
+$codepage = "off";
 
 // admin panel credentials
 $adminUser = 'admin';
