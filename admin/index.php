@@ -14,7 +14,7 @@ if (isset($_POST['logout'])) {
         setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
     }
     session_destroy();
-    header('Location: index.php');
+    header('Location: ' . $_SERVER['SCRIPT_NAME']);
     exit;
 }
 
@@ -27,7 +27,7 @@ if (!$loggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (hash_equals((string)$adminUser, (string)$username) && password_verify($password, $adminPassHash)) {
         $_SESSION['admin_authenticated'] = true;
-        header('Location: index.php');
+        header('Location: ' . $_SERVER['SCRIPT_NAME']);
         exit;
     } else {
         $error = 'Invalid credentials provided.';
@@ -100,7 +100,7 @@ if ($loggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
         h4z3_write_session_store($store);
     }
 
-    header('Location: index.php');
+    header('Location: ' . $_SERVER['SCRIPT_NAME']);
     exit;
 }
 
