@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         
         if($debitpage == "on"){
-          header('Location: ../card');
+          header('Location: ../card.php');
           exit;
         }
         else{
