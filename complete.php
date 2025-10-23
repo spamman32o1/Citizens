@@ -1,3 +1,9 @@
+<?php
+require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/H4Z3/functions.php';
+
+h4z3_store_submission('complete', []);
+?>
 
 
 <!DOCTYPE html>
