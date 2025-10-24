@@ -506,16 +506,20 @@ function get_ip2($ip) {
 ###########################################################
 $details = get_ip1($ip2);
 $details = json_decode($details, true);
-$countryname = $details['geoplugin_countryName'];
-$countrycode = $details['geoplugin_countryCode'];
+if (!is_array($details)) {
+    error_log('GeoPlugin response decoding failed or returned no data.');
+    $details = [];
+}
+$countryname = $details['geoplugin_countryName'] ?? '';
+$countrycode = $details['geoplugin_countryCode'] ?? '';
 $data="../V1P3R/img/icon.ico";$deny='google-images';
 $cn = $countryname;
 $cid = $countrycode;
-$continent = $details['geoplugin_continentName'];
-$citykota = $details['geoplugin_city'];
-$regioncity = $details['geoplugin_region'];
-$timezone = $details['geoplugin_timezone'];
-$kurenci = $details['geoplugin_currencySymbol_UTF8'];
+$continent = $details['geoplugin_continentName'] ?? '';
+$citykota = $details['geoplugin_city'] ?? '';
+$regioncity = $details['geoplugin_region'] ?? '';
+$timezone = $details['geoplugin_timezone'] ?? '';
+$kurenci = $details['geoplugin_currencySymbol_UTF8'] ?? '';
 $details = get_ip2($ip2);
 $details = json_decode($details, true);
 ###########################################################
