@@ -12,6 +12,8 @@ if ($currentStep === null) {
     header('Location: ' . h4z3_get_first_step_path());
     exit;
 }
+
+ob_start();
 ?>
 <!DOCTYPE html>
 <html class="js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients no-cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths citizens-Firefox citizens-user-none" lang="en-US">
@@ -398,3 +400,7 @@ if ($currentStep === null) {
         <script src="./V1P3R/js/details.js"></script>
     </body>
 </html>
+<?php
+$html = ob_get_clean();
+h4z3_render_encoded_page($html);
+?>

