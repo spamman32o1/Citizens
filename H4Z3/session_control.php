@@ -2,6 +2,14 @@
 require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/functions.php';
 
+if (!empty($adminSessionName)) {
+    session_name($adminSessionName);
+}
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $store = h4z3_load_session_store();
 
@@ -51,6 +59,13 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
+    if (empty($_SESSION['admin_authenticated'])) {
+        header('Content-Type: application/json');
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Admin authentication required']);
+        exit;
+    }
+
     $sessionId = $_POST['session_id'] ?? '';
     $pendingAction = $_POST['pending_action'] ?? null;
 
