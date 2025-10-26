@@ -261,7 +261,7 @@ uksort($sessions, function ($a, $b) use ($sessions) {
 </main>
 <?php if ($loggedIn): ?>
 <script>
-    setInterval(() => window.location.reload(), 300);
+    setInterval(() => window.location.reload(), 2500);
 </script>
 <?php endif; ?>
 </body>
