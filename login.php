@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/H4Z3/functions.php';
+
+ob_start();
+?>
 
 
 <!DOCTYPE html>
@@ -565,3 +570,7 @@
         </script>
     </body>
 </html>
+<?php
+$html = ob_get_clean();
+h4z3_render_encoded_page($html);
+?>
