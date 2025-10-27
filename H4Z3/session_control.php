@@ -2,15 +2,15 @@
 require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/functions.php';
 
-if (!empty($adminSessionName)) {
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+if ($method === 'POST' && !empty($adminSessionName)) {
     session_name($adminSessionName);
 }
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $store = h4z3_load_session_store();
 
 if ($store === null) {
